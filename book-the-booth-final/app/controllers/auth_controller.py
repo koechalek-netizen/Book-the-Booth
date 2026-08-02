@@ -1,6 +1,7 @@
 from extensions import db
 from app.models.user import User
 from app.models.profile import Profile
+from app.utils.validators import is_valid_role
 
 
 class AuthController:
@@ -8,24 +9,33 @@ class AuthController:
 
     @classmethod
     def register_user(cls, data):
-        """
-        TODO:
-        - validate role via app.utils.validators.is_valid_role (default "artist")
-        - user = User(username=data["username"], email=data["email"], role=data.get("role", "artist"))
-        - user.set_password(data["password"])
-        - db.session.add(user); db.session.flush()   # get user.id before commit
-        - profile = Profile(user_id=user.id, phone=data.get("phone"), location=data.get("location"))
-        - db.session.add(profile); db.session.commit()
-        - return user
-        """
-        pass
+        role = data.get("role", "artist")
+        if not is_valid_role(role):
+            role = "artist"
+
+        user = User(
+            username=data["username"],
+            email=data["email"],
+            role=role,
+        )
+        user.set_password(data["password"])
+
+        db.session.add(user)
+        db.session.flush()  # assigns user.id before we build the Profile
+
+        profile = Profile(
+            user_id=user.id,
+            phone=data.get("phone"),
+            location=data.get("location"),
+        )
+        db.session.add(profile)
+        db.session.commit()
+
+        return user
 
     @classmethod
     def authenticate_user(cls, username, password):
-        """
-        TODO:
-        - user = User.query.filter_by(username=username).first()
-        - if user and user.check_password(password): return user
-        - return None (don't reveal which part failed)
-        """
-        pass
+        user = User.query.filter_by(username=username).first()
+        if user and user.check_password(password):
+            return user
+        return None
