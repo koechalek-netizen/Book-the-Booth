@@ -13,11 +13,7 @@ from flask_jwt_extended import create_access_token
 
 
 def issue_token(user):
-    """
-    TODO:
     return create_access_token(
         identity=str(user.id),
         additional_claims={"role": user.role, "username": user.username},
     )
-    """
-    pass
