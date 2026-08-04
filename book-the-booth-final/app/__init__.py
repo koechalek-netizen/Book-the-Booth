@@ -14,8 +14,7 @@ def create_app():
     jwt.init_app(app)
     bcrypt.init_app(app)
     migrate.init_app(app, db)
-    cors.init_app(app)
-
+    cors.init_app(app, origins=app.config["CORS_ORIGIN"])
     # Models must be imported somewhere Flask-Migrate can see them.
     from app.models import User, Profile, Session, Booking  # noqa: F401
 
