@@ -245,4 +245,12 @@ def create_app():
             return error_response("Booking not found", 404)
         return "", 204
 
+    @app.route("/sessions/stats/booking-counts", methods=["GET"])
+    @jwt_required()
+    @role_required("admin")
+    def stats_booking_counts():
+        # Returns counts of bookings per session
+        stats = BookingController.get_booking_counts_per_session()
+        return jsonify(stats), 200
+
     return app
