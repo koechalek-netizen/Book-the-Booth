@@ -15,6 +15,12 @@ def create_app():
     bcrypt.init_app(app)
     migrate.init_app(app, db)
     cors.init_app(app, origins=app.config["CORS_ORIGIN"])
+
+    @app.before_request
+    def handle_preflight():
+        if request.method == "OPTIONS":
+            response = app.make_default_options_response()
+            return response
     # Models must be imported somewhere Flask-Migrate can see them.
     from app.models import User, Profile, Session, Booking  # noqa: F401
 
