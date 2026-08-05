@@ -11,6 +11,10 @@ export function SessionDetailPage() {
   const navigate = useNavigate();
   const { data: session, status, error } = useFetch(`/sessions/${id}`, [id]);
 
+  const isOwner = session && user?.role === "studio_owner" && String(session.studio_owner_id) === String(user.id);
+
+  const bookingsResult = useFetch(isOwner ? `/sessions/${id}/bookings` : null, [id, isOwner]);
+
   const [hours, setHours] = useState(1);
   const [bookError, setBookError] = useState(null);
   const [booking, setBooking] = useState(false);
@@ -66,6 +70,30 @@ export function SessionDetailPage() {
                   {booking ? "Booking…" : "Reserve this session"}
                 </button>
               </form>
+            )}
+
+            {isOwner && (
+              <div className="owner-bookings">
+                <h2>Reservations on this session</h2>
+                <StatusBlock status={bookingsResult.status} error={bookingsResult.error}>
+                  {bookingsResult.data?.length ? (
+                    <div className="card-grid">
+                      {bookingsResult.data.map((b) => (
+                        <div className="card" key={b.id}>
+                          <p>Artist #{b.artist_id}</p>
+                          <p>{b.session_date}</p>
+                          <p>
+                            {b.hours_booked} hrs @ KES {b.rate_agreed}
+                          </p>
+                          <span className={`badge ${b.status}`}>{b.status}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p>No one has reserved this session yet.</p>
+                  )}
+                </StatusBlock>
+              </div>
             )}
           </div>
         )}

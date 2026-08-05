@@ -139,11 +139,21 @@ def create_app():
         SessionController.delete_session(session_id)
         return "", 204
 
-    @app.route("/sessions/stats/booking-counts", methods=["GET"])
+    @app.route("/sessions/<int:session_id>/bookings", methods=["GET"])
     @jwt_required()
-    def sessions_booking_counts():
-        return jsonify(SessionController.sessions_with_booking_counts()), 200
+    def get_session_bookings(session_id):
+        session = SessionController.get_session_by_id(session_id)
+        if not session:
+            return error_response("Session not found", 404)
 
+        claims = get_jwt()
+        is_owner = str(session.studio_owner_id) == get_jwt_identity()
+        is_admin = claims.get("role") == "admin"
+        if not (is_owner or is_admin):
+            return error_response("Not allowed to view these bookings", 403)
+
+        bookings = BookingController.get_bookings_for_session(session_id)
+        return jsonify(bookings_schema.dump(bookings)), 200
     # ---------- Bookings ----------
 
     @app.route("/bookings", methods=["GET"])
