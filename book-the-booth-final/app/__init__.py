@@ -249,8 +249,15 @@ def create_app():
     @jwt_required()
     @role_required("admin")
     def stats_booking_counts():
-        # Returns counts of bookings per session
-        stats = BookingController.get_booking_counts_per_session()
-        return jsonify(stats), 200
-
+        # Query total bookings grouped by session room name
+        results = (
+            db.session.query(Session.room_name, db.func.count(Booking.id))
+            .join(Booking, Session.id == Booking.session_id)
+            .group_by(Session.room_name)
+            .all()
+        )
+        
+        # Format into a list of dicts: [{"room_name": "Studio A", "booking_count": 5}]
+        data = [{"room_name": room, "booking_count": count} for room, count in results]
+        return jsonify(data), 200
     return app
